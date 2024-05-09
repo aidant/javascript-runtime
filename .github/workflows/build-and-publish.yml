@@ -24,6 +24,11 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         with:
@@ -35,7 +40,13 @@ jobs:
       - name: Setup Ktlint
         run: curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.2.1/ktlint && chmod a+x ktlint && sudo mv ktlint /usr/local/bin/
 
+      - name: Pre-Build Android Install Dependencies
+        run: sudo apt install libglib2.0-dev
+
       - name: Build Android
+        env:
+          V8_FROM_SOURCE: 1
+          PYTHON: python
         run: cargo build -vv --package javascript-runtime --release --lib --target armv7-linux-androideabi --target aarch64-linux-android --target i686-linux-android --target x86_64-linux-android
 
       - name: Build Kotlin
