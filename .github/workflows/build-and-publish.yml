@@ -1,0 +1,48 @@
+name: Build & Publish
+
+on:
+  push:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-24.04
+    env:
+      SCCACHE_GHA_ENABLED: 'true'
+      RUSTC_WRAPPER: 'sccache'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Shared Compilation Cache
+        uses: mozilla-actions/sccache-action@v0.0.4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d
+
+      - name: Post-Setup Android NDK
+        run: echo "/opt/hostedtoolcache/ndk/r26d/x64/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+
+      - name: Setup Ktlint
+        run: curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.2.1/ktlint && chmod a+x ktlint && sudo mv ktlint /usr/local/bin/
+
+      - name: Build Android
+        run: cargo build -vv --package javascript-runtime --release --lib --target armv7-linux-androideabi --target aarch64-linux-android --target i686-linux-android --target x86_64-linux-android
+
+      - name: Build Kotlin
+        run: cargo run --bin uniffi-bindgen generate --library target/aarch64-linux-android/release/libjavascript_runtime.so --config packages/javascript-runtime/uniffi.toml --language kotlin --out-dir packages/javascript-runtime/android/
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-android
+          path: packages/javascript-runtime/android/uniffi/javascript_runtime

@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = ["packages/javascript-runtime", "dependencies/uniffi-bindgen"]
+
+[workspace.dependencies]
+uniffi = { version = "0.27.1" }
