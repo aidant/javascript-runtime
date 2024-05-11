@@ -47,7 +47,7 @@ jobs:
           RUST_BACKTRACE: full
           V8_FROM_SOURCE: 1
           PYTHON: python
-        run: cargo build -vv --package javascript-runtime --release --lib --target armv7-linux-androideabi --target aarch64-linux-android --target i686-linux-android --target x86_64-linux-android
+        run: cargo build -vv --package javascript-runtime --release --lib --target armv7-linux-androideabi --target aarch64-linux-android --target x86_64-linux-android
 
       - name: Build Kotlin
         env:
