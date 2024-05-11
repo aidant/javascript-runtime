@@ -11,9 +11,6 @@ jobs:
   build-android:
     name: Build Android
     runs-on: ubuntu-22.04
-    env:
-      SCCACHE_GHA_ENABLED: 'true'
-      RUSTC_WRAPPER: 'sccache'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,11 +42,18 @@ jobs:
 
       - name: Build Android
         env:
+          SCCACHE_GHA_ENABLED: true
+          RUSTC_WRAPPER: sccache
+          RUST_BACKTRACE: full
           V8_FROM_SOURCE: 1
           PYTHON: python
         run: cargo build -vv --package javascript-runtime --release --lib --target armv7-linux-androideabi --target aarch64-linux-android --target i686-linux-android --target x86_64-linux-android
 
       - name: Build Kotlin
+        env:
+          SCCACHE_GHA_ENABLED: true
+          RUSTC_WRAPPER: sccache
+          RUST_BACKTRACE: full
         run: cargo run --bin uniffi-bindgen generate --library target/aarch64-linux-android/release/libjavascript_runtime.so --config packages/javascript-runtime/uniffi.toml --language kotlin --out-dir packages/javascript-runtime/android/
 
       - name: Upload Artifacts
