@@ -47,14 +47,14 @@ jobs:
           RUST_BACKTRACE: full
           V8_FROM_SOURCE: 1
           PYTHON: python
-        run: cargo build -vv --package javascript-runtime --release --lib --target aarch64-linux-android
+        run: cargo build -vv --package javascript-runtime --release --lib --target x86_64-linux-android
 
       - name: Build Kotlin
         env:
           SCCACHE_GHA_ENABLED: true
           RUSTC_WRAPPER: sccache
           RUST_BACKTRACE: full
-        run: cargo run --bin uniffi-bindgen generate --library target/aarch64-linux-android/release/libjavascript_runtime.so --config packages/javascript-runtime/uniffi.toml --language kotlin --out-dir packages/javascript-runtime/android/
+        run: cargo run --bin uniffi-bindgen generate --library target/x86_64-linux-android/release/libjavascript_runtime.so --config packages/javascript-runtime/uniffi.toml --language kotlin --out-dir packages/javascript-runtime/android/
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
