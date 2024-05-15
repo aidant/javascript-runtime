@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin
+  xmlns="http://apache.org/cordova/ns/plugins/1.0"
+  id="cordova-plugin-javascript-runtime"
+  version="1.0.0"
+>
+  <engines>
+    <engine name="cordova" version="^9.0.0" />
+    <engine name="cordova-android" version="^8.0.0" />
+    <engine name="cordova-ios" version="^5.0.0" />
+  </engines>
+
+  <name>JavaScriptRuntime</name>
+  <description></description>
+  <author></author>
+  <keywords></keywords>
+  <license></license>
+
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <preference name="GradlePluginKotlinEnabled" value="true" />
+
+      <feature name="JavaScriptRuntimePlugin">
+        <param name="android-package" value="org.apache.cordova.plugins.javascript.JavaScriptRuntimePlugin" />
+      </feature>
+    </config-file>
+
+    <framework src="android/build-extras.gradle" custom="true" type="gradleReference" />
+
+    <source-file src="android/org/apache/cordova/plugins/javascript_runtime/JavaScriptRuntimePlugin.kt" target-dir="java/org/apache/cordova/plugins/javascript_runtime/" />
+    <source-file src="android/uniffi/javascript_runtime/javascript_runtime.kt" target-dir="java/uniffi/javascript_runtime/" />
+
+    <resource-file src="android/uniffi/javascript_runtime/aarch64-linux-android/libjavascript_runtime.so" target="jniLibs/arm64-v8a/libjavascript_runtime.so" />
+    <resource-file src="android/uniffi/javascript_runtime/x86_64-linux-android/libjavascript_runtime.so" target="jniLibs/x86_64/libjavascript_runtime.so" />
+  </platform>
+
+  <platform name="ios"></platform>
+</plugin>

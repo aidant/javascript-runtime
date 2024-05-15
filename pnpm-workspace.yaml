@@ -1,0 +1,3 @@
+packages:
+  - 'workspace/javascript-runtime-cordova-plugin'
+  - 'workspace/javascript-runtime-web'
