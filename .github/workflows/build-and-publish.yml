@@ -15,9 +15,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Shared Compilation Cache
-        uses: mozilla-actions/sccache-action@v0.0.4
-
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
@@ -42,15 +39,11 @@ jobs:
 
       - name: Build Android
         env:
-          SCCACHE_GHA_ENABLED: true
-          RUSTC_WRAPPER: sccache
           RUST_BACKTRACE: full
         run: cargo build --package javascript-runtime --release --lib --target aarch64-linux-android --target x86_64-linux-android
 
       - name: Build Kotlin
         env:
-          SCCACHE_GHA_ENABLED: true
-          RUSTC_WRAPPER: sccache
           RUST_BACKTRACE: full
         run: cargo run --bin uniffi-bindgen generate --library target/aarch64-linux-android/release/libjavascript_runtime.so --config workspace/javascript-runtime/uniffi.toml --language kotlin --out-dir workspace/javascript-runtime/android/
 
