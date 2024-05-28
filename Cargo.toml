@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["workspace/javascript-runtime", "dependencies/uniffi-bindgen"]
+members = ["packages/javascript-runtime-deno", "dependencies/uniffi-bindgen"]
 
 [workspace.dependencies]
 uniffi = { version = "0.27.1" }

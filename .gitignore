@@ -1,6 +1,5 @@
 .turbo
 node_modules
-workspace/*/lib
-workspace/*/tsconfig.tsbuildinfo
+packages/*/lib
+packages/*/tsconfig.tsbuildinfo
 target
-workspace/javascript-runtime-cordova-plugin/android/uniffi

@@ -72,7 +72,7 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
         let (host_tx, js_rx) = broadcast::channel(256);
         let (js_tx, host_rx) = broadcast::channel(256);
         let (tx_start, rx_start) = oneshot::channel();
-        let (tx_close, rx_close) = oneshot::channel();
+        let (tx_close, _rx_close) = oneshot::channel();
 
         let thread_join_handle = thread::spawn(move || {
             tokio::runtime::Builder::new_current_thread()

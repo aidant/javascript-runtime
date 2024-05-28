@@ -37,22 +37,16 @@ jobs:
       - name: Pre-Build Android Install Dependencies
         run: sudo apt install libglib2.0-dev protobuf-compiler
 
-      - name: Build Android
-        env:
-          RUST_BACKTRACE: full
-        run: |
-          cargo build --package javascript-runtime --release --lib --target aarch64-linux-android --target x86_64-linux-android
-          mkdir -p workspace/javascript-runtime-cordova-plugin/android/uniffi/javascript_runtime/aarch64-linux-android/ workspace/javascript-runtime-cordova-plugin/android/uniffi/javascript_runtime/x86_64-linux-android
-          cp target/aarch64-linux-android/release/libjavascript_runtime.so workspace/javascript-runtime-cordova-plugin/android/uniffi/javascript_runtime/aarch64-linux-android/libjavascript_runtime.so
-          cp target/x86_64-linux-android/release/libjavascript_runtime.so workspace/javascript-runtime-cordova-plugin/android/uniffi/javascript_runtime/x86_64-linux-android/libjavascript_runtime.so
+      - name: Setup Turbo
+        uses: actions-pro/setup-turbo@v1
 
-      - name: Build Kotlin
-        env:
-          RUST_BACKTRACE: full
-        run: cargo run --bin uniffi-bindgen generate --library target/aarch64-linux-android/release/libjavascript_runtime.so --config workspace/javascript-runtime/uniffi.toml --language kotlin --out-dir workspace/javascript-runtime-cordova-plugin/android/
+      - name: Build Android
+        uses: actions-pro/turbo@v1
+        with:
+          turbo: run --filter @javascript-runtime/deno build
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-android
-          path: workspace/javascript-runtime-cordova-plugin/android
+          path: packages/javascript-runtime-deno/lib/android

@@ -1,3 +1,4 @@
 packages:
-  - 'workspace/javascript-runtime-cordova-plugin'
-  - 'workspace/javascript-runtime-web'
+  - 'packages/javascript-runtime-cordova-plugin'
+  - 'packages/javascript-runtime-deno'
+  - 'packages/javascript-runtime-webview'

@@ -1,0 +1,40 @@
+{
+  "name": "@javascript-runtime/cordova-plugin",
+  "version": "1.0.0",
+  "description": "A Cordova plugin which embeds a JavaScript runtime in the native layer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aidant/javascript-runtime",
+    "directory": "packages/javascript-runtime-cordova-plugin"
+  },
+  "bugs": {
+    "url": "https://github.com/aidant/javascript-runtime/issues",
+    "email": "15520814+aidant@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/aidant/javascript-runtime/tree/main/packages/javascript-runtime-cordova-plugin",
+  "contributors": [
+    {
+      "name": "Aidan Temple",
+      "email": "15520814+aidant@users.noreply.github.com"
+    }
+  ],
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./lib/mod.d.ts",
+      "import": "./lib/mod.mjs",
+      "require": "./lib/mod.js"
+    },
+    "./package.json": {
+      "default": "./package.json"
+    }
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@javascript-runtime/deno": "workspace:*",
+    "@javascript-runtime/webview": "workspace:*"
+  }
+}

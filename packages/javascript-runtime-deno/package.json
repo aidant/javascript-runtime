@@ -1,0 +1,33 @@
+{
+  "name": "@javascript-runtime/deno",
+  "version": "1.0.0",
+  "description": "A JavaScript runtime for embedding in the native layer of a mobile app",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aidant/javascript-runtime",
+    "directory": "packages/javascript-runtime-cordova-plugin"
+  },
+  "bugs": {
+    "url": "https://github.com/aidant/javascript-runtime/issues",
+    "email": "15520814+aidant@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/aidant/javascript-runtime/tree/main/packages/javascript-runtime-cordova-plugin",
+  "contributors": [
+    {
+      "name": "Aidan Temple",
+      "email": "15520814+aidant@users.noreply.github.com"
+    }
+  ],
+  "files": [
+    "lib/android/uniffi/javascript_runtime/{aarch64-linux-android,x86_64-linux-android}/{debug,release}/libjavascript_runtime.so",
+    "lib/android/uniffi/javascript_runtime/javascript_runtime.kt"
+  ],
+  "scripts": {
+    "build": "pnpm run build:android:dev && pnpm run build:android:release && pnpm run build:android:lib && pnpm run build:android:uniffi",
+    "build:android:dev": "cargo build --package javascript-runtime-deno --lib --target aarch64-linux-android --target x86_64-linux-android",
+    "build:android:lib": "rm -rf lib && mkdir -p lib/android/uniffi/javascript_runtime && (cd ../../target && rsync -R {aarch64-linux-android,x86_64-linux-android}/{debug,release}/libjavascript_runtime.so ../packages/javascript-runtime-deno/lib/android/uniffi/javascript_runtime)",
+    "build:android:release": "cargo build --package javascript-runtime-deno --release --lib --target aarch64-linux-android --target x86_64-linux-android",
+    "build:android:uniffi": "cargo run --package uniffi-bindgen --bin uniffi-bindgen generate --library ../../target/aarch64-linux-android/release/libjavascript_runtime.so --config uniffi.toml --language kotlin --out-dir lib/android/"
+  }
+}

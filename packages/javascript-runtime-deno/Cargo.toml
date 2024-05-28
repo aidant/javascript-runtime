@@ -1,7 +1,8 @@
 [package]
-name = "javascript-runtime"
+name = "javascript-runtime-deno"
 version = "1.0.0"
 edition = "2021"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "staticlib"]

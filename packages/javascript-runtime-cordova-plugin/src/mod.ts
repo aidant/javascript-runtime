@@ -1,4 +1,9 @@
-import { init, type JavaScriptRuntimeOps, type JSONValue } from 'javascript-runtime-web'
+import {
+  JavaScriptRuntime,
+  init,
+  type JSONValue,
+  type JavaScriptRuntimeOps,
+} from '@javascript-runtime/webview'
 
 declare const cordova: {
   exec: (
@@ -31,4 +36,4 @@ init({
   pollDispatchEvent: (id: string) => exec('pollDispatchEvent', [id]),
 })
 
-export { JavaScriptRuntime, type JSONValue } from 'javascript-runtime-web'
+export { JavaScriptRuntime, type JSONValue }

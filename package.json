@@ -3,6 +3,7 @@
     "build": "turbo run build"
   },
   "devDependencies": {
+    "tsup": "^8.0.2",
     "turbo": "^1.13.3",
     "typescript": "^5.4.5"
   }
