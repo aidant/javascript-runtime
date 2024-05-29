@@ -40,7 +40,8 @@ jobs:
       - name: Pre-Build Android Install Dependencies
         run: sudo apt install libglib2.0-dev protobuf-compiler
 
-      - uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 8
 
@@ -52,6 +53,8 @@ jobs:
 
       - name: Build Android
         uses: actions-pro/turbo@v1
+        env:
+          CARGO_BUILD_JOBS: -1
         with:
           turbo: run --filter @javascript-runtime/deno build
 
