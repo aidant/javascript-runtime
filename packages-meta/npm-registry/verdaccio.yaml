@@ -1,0 +1,9 @@
+storage: ./data/verdaccio
+max_body_size: 512mb
+
+packages:
+  '@javascript-runtime/*':
+    access: $all
+    publish: $all
+
+log: { type: stdout, format: pretty, level: http }

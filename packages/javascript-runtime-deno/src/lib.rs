@@ -25,10 +25,10 @@ mod event;
 mod op_javascript_runtime;
 
 pub trait JavaScriptRuntime: Send + Sync {
-    fn start(&self, id: String, specifier: String) -> Result<(), Error>;
-    fn close(&self, id: String) -> Result<(), Error>;
-    fn post_message(&self, id: String, message: String) -> Result<(), Error>;
-    fn poll_dispatch_event(&self, id: String) -> Result<String, Error>;
+    fn start(&self, id: String, specifier: String) -> Result<(), JavaScriptRuntimeError>;
+    fn close(&self, id: String) -> Result<(), JavaScriptRuntimeError>;
+    fn post_message(&self, id: String, message: String) -> Result<(), JavaScriptRuntimeError>;
+    fn poll_dispatch_event(&self, id: String) -> Result<String, JavaScriptRuntimeError>;
 }
 
 struct JavaScriptRuntimeInstance {
@@ -39,14 +39,14 @@ struct JavaScriptRuntimeInstance {
 }
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]
-pub enum Error {
-    #[error("{0}")]
-    Any(String),
+pub enum JavaScriptRuntimeError {
+    #[error("{msg}")]
+    Any { msg: String },
 }
 
-impl From<anyhow::Error> for Error {
+impl From<anyhow::Error> for JavaScriptRuntimeError {
     fn from(e: anyhow::Error) -> Self {
-        Self::Any(e.to_string())
+        Self::Any { msg: e.to_string() }
     }
 }
 #[derive(uniffi::Object)]
@@ -66,7 +66,7 @@ impl JavaScriptRuntimeImpl {
 
 #[uniffi::export]
 impl JavaScriptRuntime for JavaScriptRuntimeImpl {
-    fn start(&self, id: String, specifier: String) -> Result<(), Error> {
+    fn start(&self, id: String, specifier: String) -> Result<(), JavaScriptRuntimeError> {
         let id = Uuid::from_str(id.as_str()).map_err(anyhow::Error::msg)?;
 
         let (host_tx, js_rx) = broadcast::channel(256);
@@ -117,7 +117,7 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
 
                     worker.run_event_loop(false).await?;
 
-                    Ok::<(), Error>(())
+                    Ok::<(), JavaScriptRuntimeError>(())
                 })
                 .unwrap()
         });
@@ -137,7 +137,7 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
         Ok(())
     }
 
-    fn close(&self, id: String) -> Result<(), Error> {
+    fn close(&self, id: String) -> Result<(), JavaScriptRuntimeError> {
         let id = Uuid::from_str(id.as_str()).map_err(anyhow::Error::msg)?;
 
         {
@@ -166,7 +166,7 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
         Ok(())
     }
 
-    fn post_message(&self, id: String, message: String) -> Result<(), Error> {
+    fn post_message(&self, id: String, message: String) -> Result<(), JavaScriptRuntimeError> {
         let id = Uuid::from_str(id.as_str()).map_err(anyhow::Error::msg)?;
         let data = serde_json::from_str(&message).map_err(anyhow::Error::msg)?;
 
@@ -186,7 +186,7 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
         Ok(())
     }
 
-    fn poll_dispatch_event(&self, id: String) -> Result<String, Error> {
+    fn poll_dispatch_event(&self, id: String) -> Result<String, JavaScriptRuntimeError> {
         let id = Uuid::from_str(id.as_str()).map_err(anyhow::Error::msg)?;
 
         let map = self.map.blocking_read();

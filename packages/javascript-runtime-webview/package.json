@@ -30,6 +30,9 @@
       "default": "./package.json"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup"
   }

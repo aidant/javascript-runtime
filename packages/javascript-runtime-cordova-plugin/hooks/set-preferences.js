@@ -1,7 +1,7 @@
-const fs = require('fs')
+const fs = require('fs/promises')
 const path = require('path')
 
-module.exports = exports = () => {
+module.exports = exports = async () => {
   const lib =
     process.env['JAVASCRIPT_RUNTIME_LIB'] ||
     path.relative(
@@ -11,13 +11,21 @@ module.exports = exports = () => {
   const profile = process.env['JAVASCRIPT_RUNTIME_PROFILE'] || 'release'
 
   const filename = path.resolve(__dirname, '../plugin.xml')
-  const contents = fs.readFileSync(filename, { encoding: 'utf-8' })
+  const contents = await fs.readFile(filename, { encoding: 'utf-8' })
 
-  contents.replace(/(?<=<preference name="JAVASCRIPT_RUNTIME_LIB" default=").*?(?=" \/>)/, lib)
-  contents.replace(
-    /(?<=<preference name="JAVASCRIPT_RUNTIME_PROFILE" default=").*?(?=" \/>)/,
-    profile
-  )
+  const newContents = contents
+    .replace(
+      /(?<=src=").*?(?=" target-dir="java\/uniffi\/javascript_runtime\/")/,
+      `${lib}/android/uniffi/javascript_runtime/javascript_runtime.kt`
+    )
+    .replace(
+      /(?<=src=").*?(?=" target="jniLibs\/arm64-v8a\/libjavascript_runtime\.so")/,
+      `${lib}/android/uniffi/javascript_runtime/aarch64-linux-android/${profile}/libjavascript_runtime.so`
+    )
+    .replace(
+      /(?<=src=").*?(?=" target="jniLibs\/x86_64\/libjavascript_runtime\.so")/,
+      `${lib}/android/uniffi/javascript_runtime/x86_64-linux-android/${profile}/libjavascript_runtime.so`
+    )
 
-  fs.writeFileSync(filename, contents)
+  await fs.writeFile(filename, newContents)
 }

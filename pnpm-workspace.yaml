@@ -2,3 +2,4 @@ packages:
   - 'packages/javascript-runtime-cordova-plugin'
   - 'packages/javascript-runtime-deno'
   - 'packages/javascript-runtime-webview'
+  - 'packages-meta/npm-registry'

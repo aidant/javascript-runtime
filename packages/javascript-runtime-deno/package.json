@@ -23,10 +23,13 @@
     "lib/android/uniffi/javascript_runtime/{aarch64-linux-android,x86_64-linux-android}/{debug,release}/libjavascript_runtime.so",
     "lib/android/uniffi/javascript_runtime/javascript_runtime.kt"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "pnpm run build:android:dev && pnpm run build:android:release && pnpm run build:android:lib && pnpm run build:android:uniffi",
+    "build": "pnpm run build:android:release && pnpm run build:android:lib && pnpm run build:android:uniffi",
     "build:android:dev": "cargo build --package javascript-runtime-deno --lib --target aarch64-linux-android --target x86_64-linux-android",
-    "build:android:lib": "rm -rf lib && mkdir -p lib/android/uniffi/javascript_runtime && (cd ../.. && rsync -am --include='debug/libjavascript_runtime.so' --include='release/libjavascript_runtime.so' --include='*/' --exclude='*' ./target/ ./packages/javascript-runtime-deno/lib/android/uniffi/javascript_runtime)",
+    "build:android:lib": "rm -rf lib && mkdir -p lib/android/uniffi/javascript_runtime && (cd ../.. && rsync -am --include='release/libjavascript_runtime.so' --include='*/' --exclude='*' ./target/ ./packages/javascript-runtime-deno/lib/android/uniffi/javascript_runtime)",
     "build:android:release": "cargo build --package javascript-runtime-deno --release --lib --target aarch64-linux-android --target x86_64-linux-android",
     "build:android:uniffi": "cargo run --package uniffi-bindgen --bin uniffi-bindgen generate --library ../../target/aarch64-linux-android/release/libjavascript_runtime.so --config uniffi.toml --language kotlin --out-dir lib/android/"
   }

@@ -4,6 +4,13 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"]
+    },
+    "//#publish:latest": {
+      "dependsOn": [
+        "@javascript-runtime/cordova-plugin#build",
+        "@javascript-runtime/deno#build",
+        "@javascript-runtime/webview#build"
+      ]
     }
   }
 }

@@ -6,11 +6,11 @@ import org.apache.cordova.PluginResult
 
 import org.json.JSONArray;
 
-import uniffi.javascript_runtime.Error
-import uniffi.javascript_runtime.JavaScriptRuntime
+import uniffi.javascript_runtime.JavaScriptRuntimeException
+import uniffi.javascript_runtime.JavaScriptRuntimeImpl
 
 class JavaScriptRuntimePlugin : CordovaPlugin() {
-  val runtime: JavaScriptRuntime = JavaScriptRuntime()
+  val runtime: JavaScriptRuntimeImpl = JavaScriptRuntimeImpl()
 
   override fun execute(action: String, args: JSONArray, context: CallbackContext): Boolean {
     when (action) {
@@ -19,7 +19,7 @@ class JavaScriptRuntimePlugin : CordovaPlugin() {
           try {
             this.runtime.start(args.getString(0), args.getString(1))
             context.success()
-          } catch (e: Error) {
+          } catch (e: JavaScriptRuntimeException) {
             context.error(e.toString())
           }
         })
@@ -30,7 +30,7 @@ class JavaScriptRuntimePlugin : CordovaPlugin() {
           try {
             this.runtime.close(args.getString(0))
             context.success()
-          } catch (e: Error) {
+          } catch (e: JavaScriptRuntimeException) {
             context.error(e.toString())
           }
         })
@@ -41,7 +41,7 @@ class JavaScriptRuntimePlugin : CordovaPlugin() {
           try {
             this.runtime.postMessage(args.getString(0), args.getString(1))
             context.success()
-          } catch (e: Error) {
+          } catch (e: JavaScriptRuntimeException) {
             context.error(e.toString())
           }
         })
@@ -52,7 +52,7 @@ class JavaScriptRuntimePlugin : CordovaPlugin() {
           try {
             val result = this.runtime.pollDispatchEvent(args.getString(0))
             context.success(result)
-          } catch (e: Error) {
+          } catch (e: JavaScriptRuntimeException) {
             context.error(e.message)
           }
         })

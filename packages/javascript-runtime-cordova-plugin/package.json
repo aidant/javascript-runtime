@@ -30,11 +30,13 @@
       "default": "./package.json"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup"
   },
   "dependencies": {
-    "@javascript-runtime/deno": "workspace:*",
     "@javascript-runtime/webview": "workspace:*"
   }
 }

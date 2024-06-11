@@ -1,0 +1,25 @@
+{
+  "name": "@javascript-runtime/cordova-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "cordova:android:build": "cordova build android",
+    "cordova:android:prepare": "rm -rf platforms/android && cordova platform add android",
+    "cordova:android:run": "cordova run android"
+  },
+  "cordova": {
+    "platforms": [
+      "android"
+    ],
+    "plugins": {
+      "cordova-plugin-javascript-runtime": {}
+    }
+  },
+  "dependencies": {
+    "cordova": "^12.0.0",
+    "cordova-android": "^13.0.0"
+  },
+  "devDependencies": {
+    "@javascript-runtime/cordova-plugin": "^1.0.0"
+  }
+}

@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin
   xmlns="http://apache.org/cordova/ns/plugins/1.0"
-  id="javascript-runtime-cordova-plugin"
+  id="cordova-plugin-javascript-runtime"
   version="1.0.0"
 >
   <engines>
-    <engine name="cordova" version="^9.0.0" />
-    <engine name="cordova-android" version="^8.0.0" />
-    <engine name="cordova-ios" version="^5.0.0" />
+    <engine name="cordova" version=">=9.0.0" />
+    <engine name="cordova-android" version=">=12.0.0" />
+    <engine name="cordova-ios" version=">=6.0.0" />
   </engines>
 
   <name>JavaScriptRuntime</name>
-  <description></description>
+  <description>A Cordova plugin which embeds a JavaScript runtime in the native layer</description>
   <author></author>
   <keywords></keywords>
-  <license></license>
+  <license>MIT</license>
 
+  <hook type="before_plugin_install" src="hooks/install-dependencies.js" />
   <hook type="after_plugin_install" src="hooks/set-preferences.js" />
   <hook type="before_build" src="hooks/set-preferences.js" />
+  <hook type="before_run" src="hooks/set-preferences.js" />
 
   <platform name="android">
     <config-file target="res/xml/config.xml" parent="/*">
@@ -30,14 +32,11 @@
 
     <framework src="android/build-extras.gradle" custom="true" type="gradleReference" />
 
-    <preference name="JAVASCRIPT_RUNTIME_LIB" default="../deno/lib" />
-    <preference name="JAVASCRIPT_RUNTIME_PROFILE" default="release" />
-
     <source-file src="android/org/apache/cordova/plugins/javascript_runtime/JavaScriptRuntimePlugin.kt" target-dir="java/org/apache/cordova/plugins/javascript_runtime/" />
-    <source-file src="$JAVASCRIPT_RUNTIME_LIB/lib/android/uniffi/javascript_runtime/javascript_runtime.kt" target-dir="java/uniffi/javascript_runtime/" />
+    <source-file src="node_modules/@javascript-runtime/deno/lib/android/uniffi/javascript_runtime/javascript_runtime.kt" target-dir="java/uniffi/javascript_runtime/" />
 
-    <resource-file src="$JAVASCRIPT_RUNTIME_LIB/lib/android/uniffi/javascript_runtime/aarch64-linux-android/$JAVASCRIPT_RUNTIME_PROFILE/libjavascript_runtime.so" target="jniLibs/arm64-v8a/libjavascript_runtime.so" />
-    <resource-file src="$JAVASCRIPT_RUNTIME_LIB/lib/android/uniffi/javascript_runtime/x86_64-linux-android/$JAVASCRIPT_RUNTIME_PROFILE/libjavascript_runtime.so" target="jniLibs/x86_64/libjavascript_runtime.so" />
+    <resource-file src="node_modules/@javascript-runtime/deno/lib/android/uniffi/javascript_runtime/aarch64-linux-android/release/libjavascript_runtime.so" target="jniLibs/arm64-v8a/libjavascript_runtime.so" />
+    <resource-file src="node_modules/@javascript-runtime/deno/lib/android/uniffi/javascript_runtime/x86_64-linux-android/release/libjavascript_runtime.so" target="jniLibs/x86_64/libjavascript_runtime.so" />
   </platform>
 
   <platform name="ios"></platform>

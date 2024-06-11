@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "build": "turbo run build"
+    "build": "turbo run build",
+    "publish:latest": "pnpm -r publish --no-git-checks",
+    "publish": "turbo run publish:latest"
   },
   "devDependencies": {
     "tsup": "^8.0.2",

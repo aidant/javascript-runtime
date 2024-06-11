@@ -1,5 +1,9 @@
+.npmrc
 .turbo
 node_modules
 packages/*/lib
 packages/*/tsconfig.tsbuildinfo
+packages-meta/javascript-runtime-cordova-e2e/platforms
+packages-meta/javascript-runtime-cordova-e2e/plugins
+packages-meta/npm-registry/data
 target
