@@ -9,13 +9,13 @@ crate-type = ["cdylib", "staticlib"]
 name = "javascript_runtime"
 
 [dependencies]
-anyhow = { version = "1.0.83" }
-deno_core = { version = "0.280.0" }
-deno_runtime = { git = "https://github.com/aidant/deno.git", rev = "3a611534d33d09823a7d4470178a7c51b2d15302" }
-serde = { version = "1.0.202", features = ["derive"] }
-serde_json = { version = "1.0.117" }
+anyhow = { version = "1.0.88" }
+deno_core = { version = "0.299.0" }
+deno_runtime = { git = 'https://github.com/aidant/deno.git', rev = "c8b166e98ef965e86aad3c3cb14cbeac0d6453d9" }
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = { version = "1.0.128" }
 serde_v8 = { version = "0.189.0" }
-thiserror = { version = "1.0.60" }
-tokio = { version = "1.37.0" }
+thiserror = { version = "1.0.63" }
+tokio = { version = "1.36.0" }
 uniffi = { workspace = true }
-uuid = { version = "1.8.0", features = ["v4", "serde"] }
+uuid = { version = "1.10.0", features = ["v4", "serde"] }

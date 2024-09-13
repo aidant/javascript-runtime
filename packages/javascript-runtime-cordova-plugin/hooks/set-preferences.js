@@ -1,7 +1,9 @@
 const fs = require('fs/promises')
 const path = require('path')
 
-module.exports = exports = async () => {
+module.exports = exports = async (context) => {
+  if (context.opts.plugin && context.opts.plugin.id !== 'cordova-plugin-javascript-runtime') return
+
   const lib =
     process.env['JAVASCRIPT_RUNTIME_LIB'] ||
     path.relative(

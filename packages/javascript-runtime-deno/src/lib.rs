@@ -1,7 +1,7 @@
 use anyhow::anyhow;
-use deno_core::{FsModuleLoader, ModuleSpecifier};
 use deno_runtime::{
-    permissions::PermissionsContainer,
+    deno_core::{FsModuleLoader, ModuleSpecifier},
+    deno_permissions::PermissionsContainer,
     worker::{MainWorker, WorkerOptions},
 };
 use event::{DispatchEvent, MessageEventInit};

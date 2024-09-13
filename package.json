@@ -1,12 +1,14 @@
 {
+  "name": "javascript-runtime",
   "scripts": {
     "build": "turbo run build",
-    "publish:latest": "pnpm -r publish --no-git-checks",
-    "publish": "turbo run publish:latest"
+    "publish": "turbo run publish:latest",
+    "publish:latest": "pnpm -r publish --no-git-checks"
   },
+  "packageManager": "pnpm@9.8.0",
   "devDependencies": {
     "tsup": "^8.0.2",
-    "turbo": "^1.13.3",
+    "turbo": "^2.1.2",
     "typescript": "^5.4.5"
   }
 }

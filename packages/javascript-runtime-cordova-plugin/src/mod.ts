@@ -23,7 +23,7 @@ const exec = <Action extends keyof JavaScriptRuntimeOps>(
     cordova.exec(
       resolve,
       (message: string) => reject(new Error(message)),
-      'JavaScriptRuntime',
+      'JavaScriptRuntimePlugin',
       action,
       args
     )

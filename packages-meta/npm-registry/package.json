@@ -6,6 +6,7 @@
     "start": "pnpm run start:verdaccio && pnpm run start:config",
     "start:config": "cd ../.. && npm config set @javascript-runtime:registry http://localhost:4873/ && npm config set //localhost:4873/:_authToken example",
     "start:verdaccio": "pm2 start --interpreter none $(which verdaccio) -- --config verdaccio.yaml",
+    "logs": "pm2 logs",
     "stop": "pnpm run stop:config && pnpm run stop:verdaccio",
     "stop:config": "cd ../.. && npm config delete key @javascript-runtime:registry && npm config delete key //localhost:4873/:_authToken",
     "stop:verdaccio": "pm2 stop verdaccio && pm2 delete verdaccio"

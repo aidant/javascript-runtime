@@ -3,9 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "cordova:plugin:add": "JAVASCRIPT_RUNTIME_ENGINE=../../../../packages/javascript-runtime-deno/javascript-runtime-deno-1.0.0.tgz cordova plugin add @javascript-runtime/cordova-plugin@latest",
+    "cordova:plugin:rm": "cordova plugin rm cordova-plugin-javascript-runtime",
     "cordova:android:build": "cordova build android",
-    "cordova:android:prepare": "rm -rf platforms/android && cordova platform add android",
-    "cordova:android:run": "cordova run android"
+    "cordova:android:prepare": "rm -rf platforms/android && JAVASCRIPT_RUNTIME_ENGINE=../../../../packages/javascript-runtime-deno/javascript-runtime-deno-1.0.0.tgz cordova platform add android",
+    "cordova:android:run": "cordova run android",
+    "cordova:android:logs": "adb logcat --pid=$(adb shell pidof -s invalid.javascript_runtime.cordova_e2e)"
+  },
+  "engines": {
+    "node": ">=16.13.0",
+    "npm": "^8.1.0"
   },
   "cordova": {
     "platforms": [

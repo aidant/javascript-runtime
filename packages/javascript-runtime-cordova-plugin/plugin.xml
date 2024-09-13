@@ -17,7 +17,7 @@
   <license>MIT</license>
 
   <hook type="before_plugin_install" src="hooks/install-dependencies.js" />
-  <hook type="after_plugin_install" src="hooks/set-preferences.js" />
+  <hook type="before_plugin_install" src="hooks/set-preferences.js" />
   <hook type="before_build" src="hooks/set-preferences.js" />
   <hook type="before_run" src="hooks/set-preferences.js" />
 

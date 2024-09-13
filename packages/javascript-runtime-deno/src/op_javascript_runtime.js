@@ -18,15 +18,17 @@ const EventConstructor = {
 const target = new EventTarget()
 
 ;(async () => {
-  const promise = op_javascript_runtime_poll_dispatch_event()
-  core.unrefOpPromise(promise)
-  const response = await promise
+  while (true) {
+    const promise = op_javascript_runtime_poll_dispatch_event()
+    core.unrefOpPromise(promise)
+    const response = await promise
 
-  if (!response) return
+    if (!response) return
 
-  target.dispatchEvent(
-    new EventConstructor[response.constructor](response.type, response.eventInitDict)
-  )
+    target.dispatchEvent(
+      new EventConstructor[response.constructor](response.type, response.eventInitDict)
+    )
+  }
 })()
 
 ObjectDefineProperty(
