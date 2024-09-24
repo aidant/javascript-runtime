@@ -10,8 +10,8 @@ name = "javascript_runtime"
 
 [dependencies]
 anyhow = { version = "1.0.88" }
-deno_core = { version = "0.299.0" }
-deno_runtime = { git = 'https://github.com/aidant/deno.git', rev = "c8b166e98ef965e86aad3c3cb14cbeac0d6453d9" }
+deno_core = { version = "0.301.0" }
+deno_runtime = { git = 'https://github.com/aidant/deno.git', rev = "dc308a8aa54be65ea4eb596a4d54a4234916affe" }
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.128" }
 serde_v8 = { version = "0.189.0" }

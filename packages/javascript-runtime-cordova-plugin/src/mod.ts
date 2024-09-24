@@ -1,39 +1,36 @@
 import {
-  JavaScriptRuntime,
   init,
-  type JSONValue,
+  JavaScriptRuntime,
   type JavaScriptRuntimeOps,
+  type JSONValue,
 } from '@javascript-runtime/webview'
 
 declare const cordova: {
   exec: (
-    successFunction: Function,
-    failFunction: Function,
+    successFunction: (result?: unknown) => void,
+    failFunction: (message: string) => void,
     service: string,
     action: string,
     args?: unknown[]
   ) => void
 }
 
-const exec = <Action extends keyof JavaScriptRuntimeOps>(
-  action: Action,
-  args: Parameters<JavaScriptRuntimeOps[Action]>
-): Promise<Awaited<ReturnType<JavaScriptRuntimeOps[Action]>>> =>
-  new Promise((resolve, reject) =>
-    cordova.exec(
-      resolve,
-      (message: string) => reject(new Error(message)),
-      'JavaScriptRuntimePlugin',
+init(
+  Object.fromEntries(
+    ['start', 'close', 'postMessage', 'pollDispatchEvent'].map((action) => [
       action,
-      args
-    )
-  )
-
-init({
-  start: (id: string, specifier: string) => exec('start', [id, specifier]),
-  close: (id: string) => exec('close', [id]),
-  postMessage: (id: string, message: JSONValue) => exec('postMessage', [id, message]),
-  pollDispatchEvent: (id: string) => exec('pollDispatchEvent', [id]),
-})
+      (...args: unknown[]) =>
+        new Promise((resolve, reject) =>
+          cordova.exec(
+            resolve,
+            (message) => reject(new Error(message)),
+            'JavaScriptRuntimePlugin',
+            action,
+            args
+          )
+        ),
+    ])
+  ) as object as JavaScriptRuntimeOps
+)
 
 export { JavaScriptRuntime, type JSONValue }

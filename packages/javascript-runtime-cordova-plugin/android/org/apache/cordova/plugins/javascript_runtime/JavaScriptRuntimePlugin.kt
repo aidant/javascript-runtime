@@ -15,47 +15,43 @@ class JavaScriptRuntimePlugin : CordovaPlugin() {
   override fun execute(action: String, args: JSONArray, context: CallbackContext): Boolean {
     when (action) {
       "start" -> {
-        cordova.getThreadPool().execute(Runnable {
-          try {
-            this.runtime.start(args.getString(0), args.getString(1))
-            context.success()
-          } catch (e: JavaScriptRuntimeException) {
-            context.error(e.toString())
-          }
-        })
+        try {
+          this.runtime.start(cordova.getActivity().applicationContext.filesDir.absolutePath, args.getString(0), args.getString(1))
+          context.success()
+        } catch (e: JavaScriptRuntimeException) {
+          context.error(e.toString())
+          return false
+        }
         return true
       }
       "close" -> {
-        cordova.getThreadPool().execute(Runnable {
-          try {
-            this.runtime.close(args.getString(0))
-            context.success()
-          } catch (e: JavaScriptRuntimeException) {
-            context.error(e.toString())
-          }
-        })
+        try {
+          this.runtime.close(args.getString(0))
+          context.success()
+        } catch (e: JavaScriptRuntimeException) {
+          context.error(e.toString())
+          return false
+        }
         return true
       }
       "postMessage" -> {
-        cordova.getThreadPool().execute(Runnable {
-          try {
-            this.runtime.postMessage(args.getString(0), args.getString(1))
-            context.success()
-          } catch (e: JavaScriptRuntimeException) {
-            context.error(e.toString())
-          }
-        })
+        try {
+          this.runtime.postMessage(args.getString(0), args.getString(1))
+          context.success()
+        } catch (e: JavaScriptRuntimeException) {
+          context.error(e.toString())
+          return false
+        }
         return true
       }
       "pollDispatchEvent" -> {
-        cordova.getThreadPool().execute(Runnable {
-          try {
-            val result = this.runtime.pollDispatchEvent(args.getString(0))
-            context.success(result)
-          } catch (e: JavaScriptRuntimeException) {
-            context.error(e.message)
-          }
-        })
+        try {
+          val result = this.runtime.pollDispatchEvent(args.getString(0))
+          context.success(result)
+        } catch (e: JavaScriptRuntimeException) {
+          context.error(e.toString())
+          return false
+        }
         return true
       }
       else -> {

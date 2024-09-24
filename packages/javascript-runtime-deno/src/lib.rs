@@ -12,7 +12,7 @@ use std::{
     rc::Rc,
     str::FromStr,
     sync::Arc,
-    thread::{self, JoinHandle},
+    thread::{self, Builder, JoinHandle},
 };
 use tokio::sync::{
     broadcast,
@@ -25,17 +25,22 @@ mod event;
 mod op_javascript_runtime;
 
 pub trait JavaScriptRuntime: Send + Sync {
-    fn start(&self, id: String, specifier: String) -> Result<(), JavaScriptRuntimeError>;
+    fn start(
+        &self,
+        root: String,
+        id: String,
+        specifier: String,
+    ) -> Result<(), JavaScriptRuntimeError>;
     fn close(&self, id: String) -> Result<(), JavaScriptRuntimeError>;
     fn post_message(&self, id: String, message: String) -> Result<(), JavaScriptRuntimeError>;
     fn poll_dispatch_event(&self, id: String) -> Result<String, JavaScriptRuntimeError>;
 }
 
 struct JavaScriptRuntimeInstance {
-    thread_join_handle: Arc<Mutex<Option<JoinHandle<()>>>>,
-    tx_close: Arc<Mutex<Option<Sender<()>>>>,
-    host_tx: broadcast::Sender<DispatchEvent>,
-    host_rx: Arc<Mutex<broadcast::Receiver<serde_json::Value>>>,
+    thread_join_handle: Arc<Mutex<Option<JoinHandle<Result<(), anyhow::Error>>>>>,
+    // tx_close: Arc<Mutex<Option<Sender<()>>>>,
+    // host_tx: broadcast::Sender<DispatchEvent>,
+    // host_rx: Arc<Mutex<broadcast::Receiver<serde_json::Value>>>,
 }
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]
@@ -66,73 +71,83 @@ impl JavaScriptRuntimeImpl {
 
 #[uniffi::export]
 impl JavaScriptRuntime for JavaScriptRuntimeImpl {
-    fn start(&self, id: String, specifier: String) -> Result<(), JavaScriptRuntimeError> {
+    fn start(
+        &self,
+        root: String,
+        id: String,
+        specifier: String,
+    ) -> Result<(), JavaScriptRuntimeError> {
         let id = Uuid::from_str(id.as_str()).map_err(anyhow::Error::msg)?;
 
-        let (host_tx, js_rx) = broadcast::channel(256);
-        let (js_tx, host_rx) = broadcast::channel(256);
-        let (tx_start, rx_start) = oneshot::channel();
-        let (tx_close, _rx_close) = oneshot::channel();
+        // let (host_tx, js_rx) = broadcast::channel(256);
+        // let (js_tx, host_rx) = broadcast::channel(256);
+        // let (tx_start, rx_start) = oneshot::channel();
+        // let (tx_close, _rx_close) = oneshot::channel();
 
-        let thread_join_handle = thread::spawn(move || {
-            tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .unwrap()
-                .block_on(async {
-                    let main_module_path = Path::new(&specifier);
-                    let main_module =
-                        ModuleSpecifier::from_file_path(main_module_path).map_err(|_| {
+        let thread_join_handle = Builder::new()
+            .name("javascript_runtime".into())
+            .spawn(move || {
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .map_err(anyhow::Error::msg)?
+                    .block_on(async {
+                        let main_module_path = Path::new(&root).join(&specifier);
+                        let main_module = ModuleSpecifier::from_file_path(
+                            main_module_path.as_path(),
+                        )
+                        .map_err(|_| {
                             anyhow!(
                                 "ModuleSpecifier cannot be built from \"{}\"",
                                 main_module_path.display()
                             )
                         })?;
 
-                    let mut worker = MainWorker::bootstrap_from_options(
-                        main_module.clone(),
-                        PermissionsContainer::allow_all(),
-                        WorkerOptions {
-                            module_loader: Rc::new(FsModuleLoader),
-                            ..Default::default()
-                        },
-                    );
+                        let mut worker = MainWorker::bootstrap_from_options(
+                            main_module.clone(),
+                            PermissionsContainer::allow_all(),
+                            WorkerOptions {
+                                module_loader: Rc::new(FsModuleLoader),
+                                ..Default::default()
+                            },
+                        );
 
-                    worker
-                        .js_runtime
-                        .op_state()
-                        .borrow_mut()
-                        .put(BridgeContainer {
-                            js_tx,
-                            js_rx: Mutex::new(js_rx),
-                        });
+                        // worker
+                        //     .js_runtime
+                        //     .op_state()
+                        //     .borrow_mut()
+                        //     .put(BridgeContainer {
+                        //         js_tx,
+                        //         js_rx: Mutex::new(js_rx),
+                        //     });
 
-                    let module_id = worker.preload_main_module(&main_module).await?;
+                        let module_id = worker.preload_main_module(&main_module).await?;
 
-                    tx_start.send(()).map_err(|_| anyhow!(""))?;
+                        // tx_start.send(()).map_err(|_| anyhow!(""))?;
 
-                    worker.evaluate_module(module_id).await?;
+                        worker.evaluate_module(module_id).await?;
 
-                    worker.dispatch_load_event()?;
+                        worker.dispatch_load_event()?;
 
-                    worker.run_event_loop(false).await?;
+                        worker.run_event_loop(false).await?;
 
-                    Ok::<(), JavaScriptRuntimeError>(())
-                })
-                .unwrap()
-        });
+                        Ok::<(), anyhow::Error>(())
+                    })
+                    .map_err(anyhow::Error::msg)
+            })
+            .map_err(anyhow::Error::msg)?;
 
         self.map.blocking_write().insert(
             id,
             JavaScriptRuntimeInstance {
                 thread_join_handle: Arc::new(Mutex::new(Some(thread_join_handle))),
-                tx_close: Arc::new(Mutex::new(Some(tx_close))),
-                host_tx,
-                host_rx: Arc::new(Mutex::new(host_rx)),
+                // tx_close: Arc::new(Mutex::new(Some(tx_close))),
+                // host_tx,
+                // host_rx: Arc::new(Mutex::new(host_rx)),
             },
         );
 
-        rx_start.blocking_recv().map_err(anyhow::Error::msg)?;
+        // rx_start.blocking_recv().map_err(anyhow::Error::msg)?;
 
         Ok(())
     }
@@ -142,23 +157,27 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
 
         {
             let map = self.map.blocking_read();
-            let instance = map.get(&id).ok_or(anyhow!(""))?;
+            let instance = map.get(&id).ok_or(anyhow!(format!(
+                r#"The thread "{id}" not be found or has already been closed"#
+            )))?;
 
-            instance
-                .tx_close
-                .blocking_lock()
-                .take()
-                .ok_or(anyhow!(""))?
-                .send(())
-                .map_err(|_| anyhow!(""))?;
+            // instance
+            //     .tx_close
+            //     .blocking_lock()
+            //     .take()
+            //     .ok_or(anyhow!(""))?
+            //     .send(())
+            //     .map_err(|_| anyhow!(""))?;
 
             instance
                 .thread_join_handle
                 .blocking_lock()
                 .take()
-                .ok_or(anyhow!(""))?
+                .ok_or(anyhow!(format!(
+                    r#"The thread "{id}" has already been consumed"#
+                )))?
                 .join()
-                .map_err(|e| anyhow!("{:?}", e))?;
+                .map_err(|e| anyhow!("{:?}", e))??;
         }
 
         self.map.blocking_write().remove(&id);
@@ -181,7 +200,7 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
             }),
         };
 
-        instance.host_tx.send(event).map_err(anyhow::Error::msg)?;
+        // instance.host_tx.send(event).map_err(anyhow::Error::msg)?;
 
         Ok(())
     }
@@ -195,17 +214,17 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
             .ok_or(anyhow!(""))
             .map_err(anyhow::Error::msg)?;
 
-        let data = instance
-            .host_rx
-            .to_owned()
-            .blocking_lock()
-            .blocking_recv()
-            .map_err(anyhow::Error::msg)?;
+        // let data = instance
+        //     .host_rx
+        //     .to_owned()
+        //     .blocking_lock()
+        //     .blocking_recv()
+        //     .map_err(anyhow::Error::msg)?;
 
         let event = DispatchEvent::MessageEvent {
             r#type: "message".to_string(),
             event_init_dict: Some(MessageEventInit {
-                data: Some(data),
+                data: None,
                 ..Default::default()
             }),
         };
