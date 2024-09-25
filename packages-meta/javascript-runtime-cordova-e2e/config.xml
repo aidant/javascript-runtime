@@ -9,8 +9,11 @@
 
   <content src="index.html" />
 
+  <allow-intent href="file://*/*" />
   <allow-intent href="http://*/*" />
   <allow-intent href="https://*/*" />
 
-  <resource-file src="../native/index.js" target-dir="assets/native"/>
+  <platform name="android">
+    <resource-file src="native/native.js" target="assets/native/native.js"/>
+  </platform>
 </widget>

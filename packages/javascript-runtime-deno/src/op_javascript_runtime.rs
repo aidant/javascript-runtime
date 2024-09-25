@@ -1,49 +1,92 @@
 use crate::event::DispatchEvent;
-use deno_core::error::AnyError;
-use deno_core::op2;
-use deno_core::serde_json;
-use deno_core::OpState;
-use std::cell::RefCell;
-use std::rc::Rc;
-use tokio::sync::broadcast;
-use tokio::sync::Mutex;
+use deno_core::{error::AnyError, op2, serde_json, OpState};
+use std::{cell::RefCell, rc::Rc, sync::Arc};
+use tokio::sync::{
+    broadcast::{Receiver, Sender},
+    Mutex,
+};
 
-pub struct BridgeContainer {
-    pub js_tx: broadcast::Sender<serde_json::Value>,
-    pub js_rx: Mutex<broadcast::Receiver<DispatchEvent>>,
+pub trait BridgeContainer: Clone {
+    fn send(&self, value: serde_json::Value) -> Result<(), AnyError>;
+    async fn recv(&self) -> Result<DispatchEvent, AnyError>;
 }
 
-deno_core::extension!(
-    javascript_runtime,
+#[derive(Clone)]
+pub struct BridgeContainerImpl {
+    tx: Sender<serde_json::Value>,
+    rx: Arc<Mutex<Receiver<DispatchEvent>>>,
+}
+
+impl BridgeContainerImpl {
+    pub fn from_broadcast_channel(
+        tx: Sender<serde_json::Value>,
+        rx: Receiver<DispatchEvent>,
+    ) -> Self {
+        BridgeContainerImpl {
+            tx,
+            rx: Arc::new(Mutex::new(rx)),
+        }
+    }
+}
+
+impl BridgeContainer for BridgeContainerImpl {
+    fn send(&self, value: serde_json::Value) -> Result<(), AnyError> {
+        self.tx.send(value)?;
+
+        Ok(())
+    }
+
+    async fn recv(&self) -> Result<DispatchEvent, AnyError> {
+        let event = self.rx.lock().await.recv().await?;
+
+        Ok(event)
+    }
+}
+
+deno_core::extension!(javascript_runtime,
     deps = [deno_web],
+    parameters = [BC: BridgeContainer],
     ops = [
-        op_javascript_runtime_post_message,
-        op_javascript_runtime_poll_dispatch_event
+        op_javascript_runtime_post_message<BC>,
+        op_javascript_runtime_poll_dispatch_event<BC>
     ],
+    esm_entry_point = "ext:javascript_runtime/op_javascript_runtime.js",
     esm = [dir "src", "op_javascript_runtime.js"],
+    options = {
+        bc: BC,
+    },
+    state = |state, options| {
+        state.put(options.bc);
+    },
 );
 
 #[op2]
-pub fn op_javascript_runtime_post_message(
+pub fn op_javascript_runtime_post_message<BC>(
     state: Rc<RefCell<OpState>>,
     #[serde] value: serde_json::Value,
-) -> Result<(), AnyError> {
-    let s = state.borrow();
-    let bridge = s.borrow::<BridgeContainer>();
+) -> Result<(), AnyError>
+where
+    BC: BridgeContainer + 'static,
+{
+    println!("op_javascript_runtime_post_message: {}", value);
 
-    bridge.js_tx.send(value)?;
+    let bc = state.borrow().borrow::<BC>().clone();
 
-    Ok(())
+    bc.send(value)
 }
 
 #[op2(async)]
 #[serde]
-pub async fn op_javascript_runtime_poll_dispatch_event(
+pub async fn op_javascript_runtime_poll_dispatch_event<BC>(
     state: Rc<RefCell<OpState>>,
-) -> Result<DispatchEvent, AnyError> {
-    let s = state.borrow();
-    let bridge = s.borrow::<BridgeContainer>();
-    let mut js_rx = bridge.js_rx.lock().await;
+    // #[smi] rid: ResourceId,
+) -> Result<DispatchEvent, AnyError>
+where
+    BC: BridgeContainer + 'static,
+{
+    println!("op_javascript_runtime_poll_dispatch_event");
 
-    Ok(js_rx.recv().await?)
+    let bc = state.borrow().borrow::<BC>().clone();
+
+    bc.recv().await
 }

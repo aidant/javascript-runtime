@@ -36,10 +36,9 @@ export class JavaScriptRuntime extends EventTarget {
 
   postMessage(message: JSONValue): void {
     ops.postMessage(this.#id, message).catch((error) => {
-      self.dispatchEvent(
+      this.dispatchEvent(
         new MessageEvent('messageerror', {
-          data: message,
-          source: this as EventTarget as MessageEventSource,
+          data: { error, message },
         })
       )
     })

@@ -1,11 +1,16 @@
-import { core, primordials } from 'ext:core/mod.js'
+import { core } from 'ext:core/mod.js'
 import {
   op_javascript_runtime_poll_dispatch_event,
   op_javascript_runtime_post_message,
 } from 'ext:core/ops'
-import { CloseEvent, CustomEvent, ErrorEvent, Event, MessageEvent } from 'ext:deno_web/02_event.js'
-
-const { ObjectDefineProperty, ObjectCreate, EventTarget } = primordials
+import {
+  CloseEvent,
+  CustomEvent,
+  ErrorEvent,
+  Event,
+  EventTarget,
+  MessageEvent,
+} from 'ext:deno_web/02_event.js'
 
 const EventConstructor = {
   Event,
@@ -31,13 +36,9 @@ const target = new EventTarget()
   }
 })()
 
-ObjectDefineProperty(
-  globalThis,
-  'JavaScriptRuntime',
-  ObjectCreate(null, {
-    addEventListener: core.propWritable(target.addEventListener.bind(target)),
-    removeEventListener: core.propWritable(target.removeEventListener.bind(target)),
+globalThis.JavaScriptRuntime = {
+  addEventListener: target.addEventListener.bind(target),
+  removeEventListener: target.removeEventListener.bind(target),
 
-    postMessage: op_javascript_runtime_post_message.bind(),
-  })
-)
+  postMessage: op_javascript_runtime_post_message.bind(),
+}

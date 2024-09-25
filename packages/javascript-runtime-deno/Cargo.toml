@@ -9,9 +9,11 @@ crate-type = ["cdylib", "staticlib"]
 name = "javascript_runtime"
 
 [dependencies]
+android_log-sys = "=0.3.1"
 anyhow = { version = "1.0.88" }
 deno_core = { version = "0.301.0" }
 deno_runtime = { git = 'https://github.com/aidant/deno.git', rev = "dc308a8aa54be65ea4eb596a4d54a4234916affe" }
+libc = "0.2.159"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.128" }
 serde_v8 = { version = "0.210.0" }

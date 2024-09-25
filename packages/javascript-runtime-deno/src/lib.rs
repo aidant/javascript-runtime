@@ -5,24 +5,14 @@ use deno_runtime::{
     worker::{MainWorker, WorkerOptions},
 };
 use event::{DispatchEvent, MessageEventInit};
-use op_javascript_runtime::BridgeContainer;
-use std::{
-    collections::HashMap,
-    path::Path,
-    rc::Rc,
-    str::FromStr,
-    sync::Arc,
-    thread::{self, Builder, JoinHandle},
-};
-use tokio::sync::{
-    broadcast,
-    oneshot::{self, Sender},
-    Mutex, RwLock,
-};
+use op_javascript_runtime::BridgeContainerImpl;
+use std::{collections::HashMap, path::Path, rc::Rc, str::FromStr, sync::Arc, thread::JoinHandle};
+use tokio::sync::{broadcast, oneshot, Mutex, RwLock};
 use uuid::Uuid;
 
 mod event;
 mod op_javascript_runtime;
+mod stdio_to_logcat;
 
 pub trait JavaScriptRuntime: Send + Sync {
     fn start(
@@ -38,9 +28,9 @@ pub trait JavaScriptRuntime: Send + Sync {
 
 struct JavaScriptRuntimeInstance {
     thread_join_handle: Arc<Mutex<Option<JoinHandle<Result<(), anyhow::Error>>>>>,
-    // tx_close: Arc<Mutex<Option<Sender<()>>>>,
-    // host_tx: broadcast::Sender<DispatchEvent>,
-    // host_rx: Arc<Mutex<broadcast::Receiver<serde_json::Value>>>,
+    tx_close: Arc<Mutex<Option<oneshot::Sender<()>>>>,
+    host_tx: broadcast::Sender<DispatchEvent>,
+    host_rx: Arc<Mutex<broadcast::Receiver<serde_json::Value>>>,
 }
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]
@@ -77,12 +67,14 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
         id: String,
         specifier: String,
     ) -> Result<(), JavaScriptRuntimeError> {
+        stdio_to_logcat!();
+
         let id = Uuid::from_str(id.as_str()).map_err(anyhow::Error::msg)?;
 
-        // let (host_tx, js_rx) = broadcast::channel(256);
-        // let (js_tx, host_rx) = broadcast::channel(256);
-        // let (tx_start, rx_start) = oneshot::channel();
-        // let (tx_close, _rx_close) = oneshot::channel();
+        let (host_tx, js_rx) = broadcast::channel(256);
+        let (js_tx, host_rx) = broadcast::channel(256);
+        let (tx_start, rx_start) = oneshot::channel();
+        let (tx_close, rx_close) = oneshot::channel();
 
         let thread_join_handle = Builder::new()
             .name("javascript_runtime".into())
@@ -91,7 +83,9 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
                     .enable_all()
                     .build()
                     .map_err(anyhow::Error::msg)?
-                    .block_on(async {
+                    .block_on(async move {
+                        println!("start of runtime execution");
+
                         let main_module_path = Path::new(&root).join(&specifier);
                         let main_module = ModuleSpecifier::from_file_path(
                             main_module_path.as_path(),
@@ -107,29 +101,32 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
                             main_module.clone(),
                             PermissionsContainer::allow_all(),
                             WorkerOptions {
+                                extensions: vec![
+                                    op_javascript_runtime::javascript_runtime::init_ops_and_esm(
+                                        BridgeContainerImpl::from_broadcast_channel(js_tx, js_rx),
+                                    ),
+                                ],
                                 module_loader: Rc::new(FsModuleLoader),
                                 ..Default::default()
                             },
                         );
 
-                        // worker
-                        //     .js_runtime
-                        //     .op_state()
-                        //     .borrow_mut()
-                        //     .put(BridgeContainer {
-                        //         js_tx,
-                        //         js_rx: Mutex::new(js_rx),
-                        //     });
-
                         let module_id = worker.preload_main_module(&main_module).await?;
 
-                        // tx_start.send(()).map_err(|_| anyhow!(""))?;
+                        tx_start
+                            .send(())
+                            .map_err(|_| anyhow!(r#"The thread "{id}" could not be started"#))?;
 
                         worker.evaluate_module(module_id).await?;
 
                         worker.dispatch_load_event()?;
 
-                        worker.run_event_loop(false).await?;
+                        tokio::select! {
+                            res1 = worker.run_event_loop(false) => res1,
+                            res2 = rx_close => res2.map_err(anyhow::Error::msg),
+                        }?;
+
+                        println!("end of runtime execution");
 
                         Ok::<(), anyhow::Error>(())
                     })
@@ -137,17 +134,25 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
             })
             .map_err(anyhow::Error::msg)?;
 
-        self.map.blocking_write().insert(
-            id,
-            JavaScriptRuntimeInstance {
-                thread_join_handle: Arc::new(Mutex::new(Some(thread_join_handle))),
-                // tx_close: Arc::new(Mutex::new(Some(tx_close))),
-                // host_tx,
-                // host_rx: Arc::new(Mutex::new(host_rx)),
-            },
-        );
-
-        // rx_start.blocking_recv().map_err(anyhow::Error::msg)?;
+        match rx_start.blocking_recv() {
+            Ok(_) => {
+                self.map.blocking_write().insert(
+                    id,
+                    JavaScriptRuntimeInstance {
+                        thread_join_handle: Arc::new(Mutex::new(Some(thread_join_handle))),
+                        tx_close: Arc::new(Mutex::new(Some(tx_close))),
+                        host_tx,
+                        host_rx: Arc::new(Mutex::new(host_rx)),
+                    },
+                );
+            }
+            Err(e1) => thread_join_handle.join().map_err(|e2| {
+                anyhow!(
+                    r#"The thread "{id}" failed with "{e1}" and could not be joined due to "{:?}""#,
+                    e2
+                )
+            })??,
+        }
 
         Ok(())
     }
@@ -157,27 +162,32 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
 
         {
             let map = self.map.blocking_read();
-            let instance = map.get(&id).ok_or(anyhow!(format!(
-                r#"The thread "{id}" not be found or has already been closed"#
-            )))?;
+            let instance = map.get(&id).ok_or(anyhow!(
+                r#"The thread "{id}" could not be found or has already been closed"#
+            ))?;
 
-            // instance
-            //     .tx_close
-            //     .blocking_lock()
-            //     .take()
-            //     .ok_or(anyhow!(""))?
-            //     .send(())
-            //     .map_err(|_| anyhow!(""))?;
+            /*
+                If the thread has already finished executing the event loop, the
+                rx_close side of the oneshot channel will he dropped. So most if
+                we are unable to send a message to the channel, it means the
+                thread has already finished executing.
+            */
+            let _ = instance
+                .tx_close
+                .blocking_lock()
+                .take()
+                .ok_or(anyhow!(r#"The thread "{id}" has already been closed"#))?
+                .send(());
 
             instance
                 .thread_join_handle
                 .blocking_lock()
                 .take()
-                .ok_or(anyhow!(format!(
-                    r#"The thread "{id}" has already been consumed"#
-                )))?
+                .ok_or(anyhow!(r#"The thread "{id}" has already been closed"#))?
                 .join()
-                .map_err(|e| anyhow!("{:?}", e))??;
+                .map_err(|e| {
+                    anyhow!(r#"The thread "{id}" could not be joined due to "{:?}""#, e)
+                })??;
         }
 
         self.map.blocking_write().remove(&id);
@@ -187,10 +197,14 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
 
     fn post_message(&self, id: String, message: String) -> Result<(), JavaScriptRuntimeError> {
         let id = Uuid::from_str(id.as_str()).map_err(anyhow::Error::msg)?;
-        let data = serde_json::from_str(&message).map_err(anyhow::Error::msg)?;
+        let data = serde_json::from_str(&message).map_err(|e| {
+            anyhow!(r#"Unable to deserialize json message for thread "{id}" failed with "{e}""#)
+        })?;
 
         let map = self.map.blocking_read();
-        let instance = map.get(&id).ok_or(anyhow!(""))?;
+        let instance = map.get(&id).ok_or(anyhow!(
+            r#"The thread "{id}" could not be found or has already been closed"#
+        ))?;
 
         let event = DispatchEvent::MessageEvent {
             r#type: "message".to_string(),
@@ -200,7 +214,12 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
             }),
         };
 
-        // instance.host_tx.send(event).map_err(anyhow::Error::msg)?;
+        instance.host_tx.send(event.clone()).map_err(|e| {
+            anyhow!(
+                r#"The host_tx channel for thread "{id}" failed to send event "{:?}" with "{e}""#,
+                event
+            )
+        })?;
 
         Ok(())
     }
@@ -209,27 +228,28 @@ impl JavaScriptRuntime for JavaScriptRuntimeImpl {
         let id = Uuid::from_str(id.as_str()).map_err(anyhow::Error::msg)?;
 
         let map = self.map.blocking_read();
-        let instance = map
-            .get(&id)
-            .ok_or(anyhow!(""))
-            .map_err(anyhow::Error::msg)?;
+        let instance = map.get(&id).ok_or(anyhow!(
+            r#"The thread "{id}" could not be found or has already been closed"#
+        ))?;
 
-        // let data = instance
-        //     .host_rx
-        //     .to_owned()
-        //     .blocking_lock()
-        //     .blocking_recv()
-        //     .map_err(anyhow::Error::msg)?;
+        let data = instance
+            .host_rx
+            .to_owned()
+            .blocking_lock()
+            .blocking_recv()
+            .map_err(|e| anyhow!(r#"The host_rx channel for thread "{id}" failed with "{e}""#))?;
 
         let event = DispatchEvent::MessageEvent {
             r#type: "message".to_string(),
             event_init_dict: Some(MessageEventInit {
-                data: None,
+                data: Some(data),
                 ..Default::default()
             }),
         };
 
-        Ok(serde_json::to_string(&event).map_err(anyhow::Error::msg)?)
+        Ok(serde_json::to_string(&event).map_err(|e| {
+            anyhow!(r#"Unable to serialize event to json for thread "{id}" failed with "{e}""#)
+        })?)
     }
 }
 
