@@ -1,0 +1,96 @@
+diff --git a/node_modules/cordova-lib/src/cordova/platform/addHelper.js b/node_modules/cordova-lib/src/cordova/platform/addHelper.js
+index 0856245..653f834 100644
+--- a/node_modules/cordova-lib/src/cordova/platform/addHelper.js
++++ b/node_modules/cordova-lib/src/cordova/platform/addHelper.js
+@@ -27,6 +27,9 @@ const cordova_util = require('../util');
+ const promiseutil = require('../../util/promise-util');
+ const platforms = require('../../platforms');
+ const detectIndent = require('detect-indent');
++const detectNewline = require('detect-newline');
++const stringifyPackage = require('stringify-package');
++const writeFileAtomicSync = require('write-file-atomic').sync;
+ const getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
+ const preparePlatforms = require('../prepare/platforms');
+ 
+@@ -228,7 +231,8 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
+                 if (modifiedPkgJson === true) {
+                     const file = fs.readFileSync(pkgJsonPath, 'utf8');
+                     const indent = detectIndent(file).indent || '  ';
+-                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
++                    const newline = detectNewline(file);
++                    writeFileAtomicSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), { encoding: 'utf8' });
+                 }
+             });
+         }).then(function () {
+diff --git a/node_modules/cordova-lib/src/cordova/platform/remove.js b/node_modules/cordova-lib/src/cordova/platform/remove.js
+index 5a91906..e8ade46 100644
+--- a/node_modules/cordova-lib/src/cordova/platform/remove.js
++++ b/node_modules/cordova-lib/src/cordova/platform/remove.js
+@@ -25,6 +25,9 @@ const cordova_util = require('../util');
+ const promiseutil = require('../../util/promise-util');
+ const platforms = require('../../platforms/platforms');
+ const detectIndent = require('detect-indent');
++const detectNewline = require('detect-newline');
++const stringifyPackage = require('stringify-package');
++const writeFileAtomicSync = require('write-file-atomic').sync;
+ 
+ module.exports = remove;
+ 
+@@ -71,7 +74,8 @@ function remove (hooksRunner, projectRoot, targets, opts) {
+                 if (modifiedPkgJson === true) {
+                     const file = fs.readFileSync(pkgJsonPath, 'utf8');
+                     const indent = detectIndent(file).indent || '  ';
+-                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
++                    const newline = detectNewline(file);
++                    writeFileAtomicSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), { encoding: 'utf8' });
+                 }
+             }
+         }).then(function () {
+diff --git a/node_modules/cordova-lib/src/cordova/plugin/add.js b/node_modules/cordova-lib/src/cordova/plugin/add.js
+index 087bc29..95b1c10 100644
+--- a/node_modules/cordova-lib/src/cordova/plugin/add.js
++++ b/node_modules/cordova-lib/src/cordova/plugin/add.js
+@@ -32,6 +32,9 @@ const fs = require('fs-extra');
+ const semver = require('semver');
+ const url = require('url');
+ const detectIndent = require('detect-indent');
++const detectNewline = require('detect-newline');
++const stringifyPackage = require('stringify-package');
++const writeFileAtomicSync = require('write-file-atomic').sync;
+ const preparePlatforms = require('../prepare/platforms');
+ 
+ module.exports = add;
+@@ -154,7 +157,8 @@ function add (projectRoot, hooksRunner, opts) {
+                             // Write to package.json
+                             const file = fs.readFileSync(pkgJsonPath, 'utf8');
+                             const indent = detectIndent(file).indent || '  ';
+-                            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
++                            const newline = detectNewline(file);
++                            writeFileAtomicSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), { encoding: 'utf8' });
+                         }
+ 
+                         const src = module.exports.parseSource(target, opts);
+diff --git a/node_modules/cordova-lib/src/cordova/plugin/remove.js b/node_modules/cordova-lib/src/cordova/plugin/remove.js
+index f6cdf89..a9cbfe6 100644
+--- a/node_modules/cordova-lib/src/cordova/plugin/remove.js
++++ b/node_modules/cordova-lib/src/cordova/plugin/remove.js
+@@ -28,6 +28,9 @@ const path = require('path');
+ const fs = require('fs-extra');
+ const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+ const detectIndent = require('detect-indent');
++const detectNewline = require('detect-newline');
++const stringifyPackage = require('stringify-package');
++const writeFileAtomicSync = require('write-file-atomic').sync;
+ const { Q_chainmap } = require('../../util/promise-util');
+ const preparePlatforms = require('../prepare/platforms');
+ 
+@@ -142,7 +145,8 @@ function remove (projectRoot, targets, hooksRunner, opts) {
+             // Write out new package.json with plugin removed correctly.
+             const file = fs.readFileSync(pkgJsonPath, 'utf8');
+             const indent = detectIndent(file).indent || '  ';
+-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
++            const newline = detectNewline(file);
++            writeFileAtomicSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), { encoding: 'utf8' });
+         }
+     }
+ }

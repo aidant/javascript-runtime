@@ -88,5 +88,13 @@ where
 
     let bc = state.borrow().borrow::<BC>().clone();
 
-    bc.recv().await
+    let event = bc.recv().await?;
+
+    println!(
+        "op_javascript_runtime_poll_dispatch_event: {:?} {}",
+        event,
+        serde_json::to_string(&event)?
+    );
+
+    Ok(event)
 }

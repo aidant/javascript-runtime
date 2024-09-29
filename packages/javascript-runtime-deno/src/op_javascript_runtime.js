@@ -1,4 +1,3 @@
-import { core } from 'ext:core/mod.js'
 import {
   op_javascript_runtime_poll_dispatch_event,
   op_javascript_runtime_post_message,
@@ -24,9 +23,7 @@ const target = new EventTarget()
 
 ;(async () => {
   while (true) {
-    const promise = op_javascript_runtime_poll_dispatch_event()
-    core.unrefOpPromise(promise)
-    const response = await promise
+    const response = await op_javascript_runtime_poll_dispatch_event()
 
     if (!response) return
 

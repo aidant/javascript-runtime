@@ -5,6 +5,7 @@ import org.apache.cordova.CordovaPlugin
 import org.apache.cordova.PluginResult
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import uniffi.javascript_runtime.JavaScriptRuntimeException
 import uniffi.javascript_runtime.JavaScriptRuntimeImpl
@@ -51,7 +52,7 @@ class JavaScriptRuntimePlugin : CordovaPlugin() {
         cordova.getThreadPool().execute(Runnable {
           try {
             val result = this.runtime.pollDispatchEvent(args.getString(0))
-            context.success(result)
+            context.success(JSONObject(result))
           } catch (e: JavaScriptRuntimeException) {
             context.error(e.toString())
           }

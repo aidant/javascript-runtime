@@ -32,6 +32,7 @@
   "devDependencies": {
     "@javascript-runtime/cordova-plugin": "^1.0.0",
     "comlink": "^4.4.1",
-    "esbuild": "^0.24.0"
+    "esbuild": "^0.24.0",
+    "patch-package": "^8.0.0"
   }
 }

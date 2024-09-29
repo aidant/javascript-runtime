@@ -3,7 +3,10 @@
 node_modules
 packages/*/lib
 packages/*/tsconfig.tsbuildinfo
+packages/*/*.tgz
+packages-meta/javascript-runtime-cordova-e2e/native
 packages-meta/javascript-runtime-cordova-e2e/platforms
 packages-meta/javascript-runtime-cordova-e2e/plugins
+packages-meta/javascript-runtime-cordova-e2e/www/index.js*
 packages-meta/npm-registry/data
 target
