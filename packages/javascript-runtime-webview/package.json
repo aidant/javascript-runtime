@@ -1,6 +1,6 @@
 {
   "name": "@javascript-runtime/webview",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "From a webview communicate with a JavaScript runtime runtime in a native layer",
   "license": "MIT",
   "repository": {

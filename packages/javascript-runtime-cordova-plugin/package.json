@@ -1,6 +1,6 @@
 {
   "name": "@javascript-runtime/cordova-plugin",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A Cordova plugin which embeds a JavaScript runtime in the native layer",
   "license": "MIT",
   "repository": {

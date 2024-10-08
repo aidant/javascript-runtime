@@ -2,7 +2,7 @@
 <plugin
   xmlns="http://apache.org/cordova/ns/plugins/1.0"
   id="cordova-plugin-javascript-runtime"
-  version="1.0.0"
+  version="0.1.0"
 >
   <engines>
     <engine name="cordova" version=">=9.0.0" />

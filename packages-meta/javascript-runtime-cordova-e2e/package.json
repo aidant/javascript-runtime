@@ -6,10 +6,10 @@
     "build": "npm run build:webview && npm run build:native",
     "build:native": "esbuild src/native.js --bundle --minify --sourcemap --target=deno1.45 --format=esm --outfile=native/native.js",
     "build:webview": "esbuild src/webview.js --bundle --minify --sourcemap --target=chrome128 --format=esm --outfile=www/index.js",
-    "cordova:plugin:add": "JAVASCRIPT_RUNTIME_ENGINE=../../../../packages/javascript-runtime-deno/javascript-runtime-deno-1.0.0.tgz cordova plugin add @javascript-runtime/cordova-plugin@latest",
+    "cordova:plugin:add": "JAVASCRIPT_RUNTIME_ENGINE=../../../../packages/javascript-runtime-deno/javascript-runtime-deno-0.1.0.tgz cordova plugin add @javascript-runtime/cordova-plugin@latest",
     "cordova:plugin:rm": "cordova plugin rm cordova-plugin-javascript-runtime",
     "cordova:android:build": "cordova build android",
-    "cordova:android:prepare": "rm -rf platforms/android && JAVASCRIPT_RUNTIME_ENGINE=../../../../packages/javascript-runtime-deno/javascript-runtime-deno-1.0.0.tgz cordova platform add android",
+    "cordova:android:prepare": "rm -rf platforms/android && JAVASCRIPT_RUNTIME_ENGINE=../../../../packages/javascript-runtime-deno/javascript-runtime-deno-0.1.0.tgz cordova platform add android",
     "cordova:android:run": "cordova run android",
     "cordova:android:logs": "adb logcat --pid=$(adb shell pidof -s invalid.javascript_runtime.cordova_e2e)"
   },
@@ -30,7 +30,7 @@
     "cordova-android": "^13.0.0"
   },
   "devDependencies": {
-    "@javascript-runtime/cordova-plugin": "^1.0.0",
+    "@javascript-runtime/cordova-plugin": "^0.1.0",
     "comlink": "^4.4.1",
     "esbuild": "^0.24.0",
     "patch-package": "^8.0.0"

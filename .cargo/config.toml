@@ -1,3 +1,6 @@
+[env]
+RUSTY_V8_MIRROR = { value = "https://github.com/aidant/rusty_v8/releases" }
+
 [target.x86_64-linux-android]
 linker = "x86_64-linux-android34-clang"
 

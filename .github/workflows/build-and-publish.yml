@@ -21,35 +21,25 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r26d
+          ndk-version: r27b
 
       - name: Post-Setup Android NDK
-        run: echo "/opt/hostedtoolcache/ndk/r26d/x64/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+        run: echo "/opt/hostedtoolcache/ndk/r27b/x64/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
 
       - name: Setup Ktlint
-        run: curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.2.1/ktlint && chmod a+x ktlint && sudo mv ktlint /usr/local/bin/
-
-      - name: Pre-Build Android Install Dependencies
-        run: sudo apt install libglib2.0-dev protobuf-compiler
+        run: curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.3.1/ktlint && chmod a+x ktlint && sudo mv ktlint /usr/local/bin/
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
 
       - name: Setup Turbo
         uses: actions-pro/setup-turbo@v1
         with:
           package-manager: pnpm
-          version: ^1.13.3
+          version: ^2.1.2
 
       - name: Build Android
         uses: actions-pro/turbo@v1

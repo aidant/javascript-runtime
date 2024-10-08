@@ -3,7 +3,7 @@
   xmlns="http://www.w3.org/ns/widgets"
   xmlns:cdv="http://cordova.apache.org/ns/1.0"
   id="invalid.javascript_runtime.cordova_e2e"
-  version="1.0.0"
+  version="0.1.0"
 >
   <name>JavaScriptRuntime Cordova E2E</name>
 
